@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faszx99 - Dashboard Manajemen Gmail & Penarikan Saldo</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        },
+                        darkbg: {
+                            100: '#1e293b',
+                            200: '#0f172a',
+                            300: '#0b0f19',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* Custom Glassmorphism */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(229, 231, 235, 0.8);
+        }
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+        }
+        .dark .glass-nav {
+            background: rgba(11, 15, 25, 0.92);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+
+        .glow-brand {
+            box-shadow: 0 0 25px -4px rgba(99, 102, 241, 0.4);
+        }
+
+        .glow-emerald {
+            box-shadow: 0 0 25px -4px rgba(16, 185, 129, 0.35);
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.96) translateY(-8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .toast-enter {
+            animation: slideInRight 0.3s ease forwards;
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkbg-300 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed top-20 right-5 z-50 flex flex-col space-y-3 pointer-events-none"></div>
+
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-darkbg-200 border-r border-slate-200 dark:border-slate-800/80 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col justify-between">
+            <div>
+                <!-- Brand Header -->
+                <div class="flex items-center justify-between h-16 px-6 border-b border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white font-black text-lg shadow-md glow-brand">
+                            Z99
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-base font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-indigo-400">
+                                Faszx99 Gmail
+                            </span>
+                            <span class="text-[10px] text-slate-400 font-medium">OWNER</span>
+                        </div>
+                    </div>
+                    <button id="closeSidebarBtn" class="lg:hidden text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Navigation Sidebar Links -->
+                <nav class="px-4 mt-6 space-y-1.5">
+                    <button id="navLinkGmail" onclick="switchMainTab('gmail')" class="w-full flex items-center px-4 py-3 text-sm font-semibold rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 transition-colors">
+                        <i class="fa-solid fa-envelope-circle-check w-5 text-lg mr-3"></i>
+                        <span>Verifikasi Gmail</span>
+                        <span id="navPendingBadge" class="ml-auto text-[10px] bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold px-2 py-0.5 rounded-full">0</span>
+                    </button>
+                    <button id="navLinkWithdraw" onclick="switchMainTab('withdraw')" class="w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-white transition-colors">
+                        <i class="fa-solid fa-wallet w-5 text-lg mr-3 text-emerald-500"></i>
+                        <span>Penarikan Saldo</span>
+                        <span id="navWithdrawBadge" class="ml-auto text-[10px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full">Proses</span>
+                    </button>
+                    <button onclick="showRateInfo()" class="w-full text-left flex items-center px-4 py-3 text-sm font-medium rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-white transition-colors">
+                        <i class="fa-solid fa-tags w-5 text-lg mr-3 text-indigo-400"></i>
+                        <span>Rate Akun (Rp 4.700)</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Footer Balance Quick Card -->
+            <div class="p-4 m-4 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 border border-slate-800 text-white relative overflow-hidden">
+                <div class="relative z-10">
+                    <p class="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Saldo Siap Tarik</p>
+                    <h4 id="sidebarAvailableBalance" class="text-xl font-black text-emerald-400 mt-0.5">Rp 0</h4>
+                    <button onclick="openWithdrawModal()" class="w-full mt-3 py-1.5 px-3 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center space-x-1.5 shadow">
+                        <i class="fa-solid fa-money-bill-transfer"></i>
+                        <span>Tarik Sekarang</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN AREA CONTAINER -->
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden lg:pl-64">
+
+            <!-- HEADER NAVBAR -->
+            <header class="glass-nav sticky top-0 z-30 h-16 flex items-center justify-between px-4 lg:px-8 transition-colors">
+                <div class="flex items-center space-x-4">
+                    <button id="openSidebarBtn" class="lg:hidden text-slate-600 dark:text-slate-300 hover:text-brand-600 p-2 rounded-lg">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                    <!-- Global Search -->
+                    <div class="relative w-48 sm:w-72 md:w-96">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                        </span>
+                        <input id="searchInput" type="text" placeholder="Cari Gmail, TRX ID, atau provider..." 
+                            class="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-slate-100 dark:bg-darkbg-100 border border-transparent focus:border-brand-500 focus:bg-white dark:focus:bg-darkbg-200 text-slate-800 dark:text-slate-100 outline-none transition-all">
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <!-- Live Time -->
+                    <div class="hidden sm:flex flex-col text-right mr-2">
+                        <span id="liveClock" class="text-xs font-bold text-slate-700 dark:text-slate-200">00:00:00 WIB</span>
+                        <span class="text-[10px] text-slate-400">Faszxtzy</span>
+                    </div>
+
+                    <!-- Dark/Light Theme Switcher -->
+                    <button id="themeToggle" class="p-2.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
+                        <i id="themeIcon" class="fa-solid fa-sun text-amber-400 text-lg"></i>
+                    </button>
+
+                    <!-- Profile Section -->
+                    <div class="flex items-center space-x-3 pl-2 border-l border-slate-200 dark:border-slate-800">
+                        <div class="w-9 h-9 rounded-xl bg-brand-600 text-white font-bold flex items-center justify-center text-sm shadow">
+                            AD
+                        </div>
+                        <div class="hidden md:block text-left">
+                            <p class="text-xs font-bold leading-tight">Admin Partner Faszx99</p>
+                            <p class="text-[10px] text-slate-400">partner@faszx99.com</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- MAIN CONTENT DISPLAY -->
+            <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+                <!-- MAIN PAGE HEADER & ACTIONS -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Dashboard Kelola Gmail & Saldo</h1>
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Dapatkan komisi Rp 4.700 per akun Gmail valid yang disetujui & tarik saldo kapan saja.</p>
+                    </div>
+                    <div class="flex items-center space-x-2.5 flex-wrap gap-y-2">
+                        <button onclick="openWithdrawModal()" class="px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition-all flex items-center shadow-md glow-emerald">
+                            <i class="fa-solid fa-hand-holding-dollar mr-2 text-sm"></i> Tarik Saldo
+                        </button>
+                        <button id="btnImportModal" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 transition-all flex items-center">
+                            <i class="fa-solid fa-file-import mr-2"></i> Import Gmail
+                        </button>
+                        <button id="btnExportCSV" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 transition-all flex items-center">
+                            <i class="fa-solid fa-file-csv mr-2 text-emerald-500"></i> Export CSV
+                        </button>
+                        <button id="btnResetData" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition-all flex items-center">
+                            <i class="fa-solid fa-rotate-left mr-2"></i> Reset 1.300 Data
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 5 KEY METRICS / BALANCE STAT CARDS -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                    
+                    <!-- Card 1: Saldo Bisa Ditarik (AVAILABLE BALANCE) -->
+                    <div class="glass-card p-5 rounded-2xl shadow-sm relative overflow-hidden border-l-4 border-l-emerald-500 bg-gradient-to-br from-emerald-500/5 to-transparent">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Saldo Siap Ditarik</p>
+                                <h3 id="statAvailableBalance" class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">Rp 0</h3>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-lg shrink-0">
+                                <i class="fa-solid fa-wallet"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-center justify-between text-[11px]">
+                            <span class="text-slate-400">Rate: <strong class="text-slate-700 dark:text-slate-200">Rp 4.700 / Gmail</strong></span>
+                            <button onclick="openWithdrawModal()" class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline">Tarik <i class="fa-solid fa-arrow-right ml-0.5"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Saldo Tertunda / Pending Withdrawal -->
+                    <div class="glass-card p-5 rounded-2xl shadow-sm relative overflow-hidden border-l-4 border-l-amber-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-bold uppercase tracking-wider text-amber-500">Penarikan Pending</p>
+                                <h3 id="statPendingWithdrawal" class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">Rp 0</h3>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center text-lg shrink-0">
+                                <i class="fa-solid fa-hourglass-half"></i>
+                            </div>
+                        </div>
+                        <p id="statPendingCountText" class="text-[11px] text-slate-400 mt-3">0 transaksi diproses</p>
+                    </div>
+
+                    <!-- Card 3: Total Gmail Pending (Approved) -->
+                    <div class="glass-card p-5 rounded-2xl shadow-sm relative overflow-hidden">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-bold uppercase tracking-wider text-indigo-500">Gmail Pending</p>
+                                <h3 id="statApproved" class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">0</h3>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center text-lg shrink-0">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                        </div>
+                        <p id="statApprovedEarnings" class="text-[11px] text-slate-400 mt-3">Total Akumulasi: Rp 0</p>
+                    </div>
+
+                    <!-- Card 4: Gmail Diterima (Approved) -->
+                    <div class="glass-card p-5 rounded-2xl shadow-sm relative overflow-hidden">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Gmail Diterima</p>
+                                <h3 id="statPending" class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">0</h3>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-slate-500/10 text-slate-400 flex items-center justify-center text-lg shrink-0">
+                                <i class="fa-solid fa-envelope"></i>
+                            </div>
+                        </div>
+                        <p id="statPotentialEarnings" class="text-[11px] text-slate-400 mt-3">Potensi Tambahan: Rp 0</p>
+                    </div>
+
+                    <!-- Card 5: Gmail Ditolak (Rejected) -->
+                    <div class="glass-card p-5 rounded-2xl shadow-sm relative overflow-hidden">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-bold uppercase tracking-wider text-rose-500">Gmail Ditolak</p>
+                                <h3 id="statRejected" class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">0</h3>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center text-lg shrink-0">
+                                <i class="fa-solid fa-circle-xmark"></i>
+                            </div>
+                        </div>
+                        <p id="statRejectedPct" class="text-[11px] text-slate-400 mt-3">0% dari total akun</p>
+                    </div>
+
+                </div>
+
+                <!-- PROGRESS BAR MONITOR -->
+                <div class="glass-card p-4 rounded-2xl shadow-sm space-y-2">
+                    <div class="flex justify-between items-center text-xs font-bold">
+                        <span class="text-slate-700 dark:text-slate-300"><i class="fa-solid fa-chart-line mr-1.5 text-brand-500"></i> Status Kelayakan Verifikasi Akun Gmail</span>
+                        <span id="progressPercentageText" class="text-brand-600 dark:text-brand-400">0% Selesai</span>
+                    </div>
+                    <div class="w-full h-3 bg-slate-200 dark:bg-darkbg-100 rounded-full overflow-hidden flex">
+                        <div id="progressApprovedBar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%" title="Diterima"></div>
+                        <div id="progressRejectedBar" class="bg-rose-500 h-full transition-all duration-300" style="width: 0%" title="Ditolak"></div>
+                        <div id="progressPendingBar" class="bg-amber-400 h-full transition-all duration-300" style="width: 100%" title="Menunggu Review"></div>
+                    </div>
+                    <div class="flex items-center space-x-6 text-[11px] text-slate-400 pt-1">
+                        <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-1.5"></span> Diterima (+Rp 4.700)</span>
+                        <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 mr-1.5"></span> Ditolak</span>
+                        <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 mr-1.5"></span> Menunggu</span>
+                    </div>
+                </div>
+
+                <!-- MAIN TAB SWAP NAVIGATION (Gmail List vs Withdrawal History) -->
+                <div class="flex border-b border-slate-200 dark:border-slate-800 space-x-6 text-sm font-bold">
+                    <button id="tabBtnGmailView" onclick="switchMainTab('gmail')" class="pb-3 border-b-2 border-brand-500 text-brand-600 dark:text-brand-400 flex items-center">
+                        <i class="fa-solid fa-list-check mr-2"></i> Kelola Daftar Gmail
+                    </button>
+                    <button id="tabBtnWithdrawView" onclick="switchMainTab('withdraw')" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center">
+                        <i class="fa-solid fa-clock-rotate-left mr-2"></i> Riwayat Penarikan Saldo
+                        <span id="withdrawCountBadge" class="ml-2 px-2 py-0.5 text-[10px] rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">0</span>
+                    </button>
+                </div>
+
+                <!-- SECTION 1: GMAIL DATATABLE CONTAINER -->
+                <div id="gmailSection" class="glass-card rounded-2xl p-4 sm:p-6 shadow-sm space-y-4">
+                    
+                    <!-- Filters & Bulk Action Toolbar -->
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
+                        
+                        <!-- Status Filter Tabs -->
+                        <div class="flex items-center space-x-1 overflow-x-auto pb-2 lg:pb-0">
+                            <button class="filter-tab active px-3.5 py-1.5 text-xs font-bold rounded-xl bg-brand-600 text-white transition-all shrink-0" data-status="ALL">
+                                Semua (<span id="tabAllCount">0</span>)
+                            </button>
+                            <button class="filter-tab px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shrink-0" data-status="PENDING">
+                                Diterima (<span id="tabPendingCount">0</span>)
+                            </button>
+                            <button class="filter-tab px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shrink-0" data-status="ACCEPTED">
+                                Pending (<span id="tabApprovedCount">0</span>)
+                            </button>
+                            <button class="filter-tab px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shrink-0" data-status="REJECTED">
+                                Ditolak (<span id="tabRejectedCount">0</span>)
+                            </button>
+                        </div>
+
+                        <!-- Bulk Action Controls -->
+                        <div class="flex items-center space-x-2 flex-wrap gap-y-2">
+                            <span class="text-xs text-slate-400 font-medium mr-1"><span id="selectedCountText">0</span> dipilih</span>
+                            <button id="btnBulkAccept" disabled class="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-all flex items-center shadow-sm">
+                                <i class="fa-solid fa-check-double mr-1.5"></i> Terima Semua (+Rp)
+                            </button>
+                            <button id="btnBulkReject" disabled class="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-all flex items-center shadow-sm">
+                                <i class="fa-solid fa-xmark mr-1.5"></i> Tolak Semua
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Page Size Selector -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-500 gap-2">
+                        <div class="flex items-center space-x-2">
+                            <span>Tampilkan</span>
+                            <select id="pageSizeSelect" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-darkbg-100 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-bold outline-none">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="1300">1300</option>
+                            </select>
+                            <span>akun per halaman</span>
+                        </div>
+                        <div id="tableSummaryInfo" class="font-medium">
+                            Menampilkan 1 - 25 dari 1300 akun
+                        </div>
+                    </div>
+
+                    <!-- GMAIL TABLE -->
+                    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800/80">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100/80 dark:bg-darkbg-100 text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">
+                                <tr>
+                                    <th class="p-3.5 text-center w-10">
+                                        <input type="checkbox" id="selectAllCheckbox" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer">
+                                    </th>
+                                    <th class="p-3.5 w-12 text-center">ID</th>
+                                    <th class="p-3.5">Akun Gmail</th>
+                                    <th class="p-3.5">Tanggal Masuk</th>
+                                    <th class="p-3.5">Status</th>
+                                    <th class="p-3.5">Komisi / Nilai</th>
+                                    <th class="p-3.5 text-center w-48">Aksi Verifikasi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gmailTableBody" class="divide-y divide-slate-200 dark:divide-slate-800/60 font-medium">
+                                <!-- Dynamic JS rendering -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- PAGINATION CONTROLS -->
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+                        <span id="pageInfoText" class="text-xs text-slate-500">Halaman 1 dari 52</span>
+                        <div id="paginationControls" class="flex items-center space-x-1">
+                            <!-- Dynamic pagination -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- SECTION 2: WITHDRAWAL HISTORY TABLE CONTAINER -->
+                <div id="withdrawSection" class="glass-card rounded-2xl p-4 sm:p-6 shadow-sm space-y-4 hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900 dark:text-white">Riwayat Pengajuan Penarikan Saldo</h3>
+                            <p class="text-xs text-slate-400">Daftar permintaan pembayaran komisi ke rekening / e-wallet Anda.</p>
+                        </div>
+                        <button onclick="openWithdrawModal()" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition-all flex items-center shadow-sm w-max">
+                            <i class="fa-solid fa-plus mr-1.5"></i> Buat Penarikan Baru
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800/80">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100/80 dark:bg-darkbg-100 text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">
+                                <tr>
+                                    <th class="p-3.5">TRX ID</th>
+                                    <th class="p-3.5">Tanggal & Waktu</th>
+                                    <th class="p-3.5">Metode Pembayaran</th>
+                                    <th class="p-3.5">Tujuan & Nama</th>
+                                    <th class="p-3.5">Jumlah Penarikan</th>
+                                    <th class="p-3.5">Status</th>
+                                    <th class="p-3.5 text-center">Simulasi Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="withdrawTableBody" class="divide-y divide-slate-200 dark:divide-slate-800/60 font-medium">
+                                <!-- Dynamic JS rendering -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL 1: FORM PENARIKAN SALDO (WITHDRAWAL) -->
+    <div id="withdrawModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-darkbg-200 w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 relative animate-fade-in space-y-5">
+            <button onclick="closeWithdrawModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-white">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-xl font-bold">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Penarikan Saldo Komisi</h3>
+                    <p class="text-xs text-slate-400">Transfer dana aman ke Rekening Bank atau E-Wallet.</p>
+                </div>
+            </div>
+
+            <!-- Current Available Balance Banner -->
+            <div class="p-3.5 rounded-xl bg-slate-100 dark:bg-darkbg-100 border border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                <span class="text-xs text-slate-500 font-semibold">Saldo Tersedia:</span>
+                <span id="modalAvailableBalance" class="text-lg font-black text-emerald-500">Rp 0</span>
+            </div>
+
+            <!-- Form Body -->
+            <form id="withdrawForm" onsubmit="handleWithdrawSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Pilih Metode Pembayaran</label>
+                    <select id="withdrawMethod" required onchange="updateAccountLabel()" class="w-full p-2.5 text-xs rounded-xl bg-slate-50 dark:bg-darkbg-100 border border-slate-200 dark:border-slate-700 focus:border-emerald-500 outline-none text-slate-800 dark:text-slate-100 font-semibold">
+                        <option value="BCA">Bank BCA (Transfer Bank)</option>
+                        <option value="MANDIRI">Bank Mandiri (Transfer Bank)</option>
+                        <option value="BRI">Bank BRI (Transfer Bank)</option>
+                        <option value="BNI">Bank BNI (Transfer Bank)</option>
+                        <option value="DANA">DANA (E-Wallet)</option>
+                        <option value="OVO">OVO (E-Wallet)</option>
+                        <option value="GOPAY">GoPay (E-Wallet)</option>
+                        <option value="SHOPEEPAY">ShopeePay (E-Wallet)</option>
+                        <option value="USDT">USDT - TRC20 (Crypto)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nominal Penarikan (Rp)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-xs font-bold text-slate-400">Rp</span>
+                        <input id="withdrawAmount" type="number" min="10000" step="500" placeholder="Minimal Rp 10.000" required 
+                            class="w-full pl-10 pr-16 py-2.5 text-xs font-bold rounded-xl bg-slate-50 dark:bg-darkbg-100 border border-slate-200 dark:border-slate-700 focus:border-emerald-500 outline-none text-slate-800 dark:text-slate-100">
+                        <button type="button" onclick="setMaxWithdrawAmount()" class="absolute inset-y-1 right-1 px-2.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg hover:bg-emerald-500/20 transition-all">
+                            MAKSIMAL
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-1">Minimal penarikan Rp 10.000. Bebas biaya admin.</p>
+                </div>
+
+                <div>
+                    <label id="accountNumberLabel" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nomor Rekening / No HP E-Wallet</label>
+                    <input id="withdrawAccountNo" type="text" placeholder="Contoh: 1234567890" required 
+                        class="w-full p-2.5 text-xs font-semibold rounded-xl bg-slate-50 dark:bg-darkbg-100 border border-slate-200 dark:border-slate-700 focus:border-emerald-500 outline-none text-slate-800 dark:text-slate-100">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Pemilik Account / Rekening</label>
+                    <input id="withdrawAccountName" type="text" placeholder="Sesuai nama di rekening/e-wallet" required 
+                        class="w-full p-2.5 text-xs font-semibold rounded-xl bg-slate-50 dark:bg-darkbg-100 border border-slate-200 dark:border-slate-700 focus:border-emerald-500 outline-none text-slate-800 dark:text-slate-100">
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <button type="button" onclick="closeWithdrawModal()" class="px-4 py-2 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Batal</button>
+                    <button type="submit" class="px-5 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-md">
+                        Konfirmasi Penarikan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: IMPORT GMAIL -->
+    <div id="importModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-darkbg-200 w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 relative animate-fade-in">
+            <button id="closeImportModal" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-white">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center">
+                <i class="fa-solid fa-file-arrow-up mr-2 text-brand-500"></i> Import Daftar Gmail Baru
+            </h3>
+            <p class="text-xs text-slate-400 mt-1 mb-4">Masukkan daftar alamat Gmail baru (1 email per baris).</p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Daftar Gmail</label>
+                    <textarea id="importTextarea" rows="6" placeholder="user1@gmail.com&#10;user2@gmail.com&#10;user3@gmail.com" 
+                        class="w-full p-3 text-xs rounded-xl bg-slate-50 dark:bg-darkbg-100 border border-slate-200 dark:border-slate-700 focus:border-brand-500 outline-none text-slate-800 dark:text-slate-100 font-mono"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button id="cancelImportBtn" class="px-4 py-2 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Batal</button>
+                    <button id="submitImportBtn" class="px-4 py-2 text-xs font-bold rounded-xl bg-brand-600 hover:bg-brand-700 text-white transition-colors shadow-md">Proses Import</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONSTANTS & STATE MANAGEMENT ---
+        const RATE_PER_GMAIL = 4700; // Rp 4.700 per verified Gmail
+        const APPROVED_INITIAL_COUNT = 1120; // Exact requested approved Gmail count
+        const PENDING_INITIAL_COUNT = 150;
+        const REJECTED_INITIAL_COUNT = 30;
+        const TOTAL_MOCK_COUNT = APPROVED_INITIAL_COUNT + PENDING_INITIAL_COUNT + REJECTED_INITIAL_COUNT; // 1,300 total accounts
+        
+        let accounts = [];
+        let withdrawals = [];
+        let filteredAccounts = [];
+        let selectedIds = new Set();
+        
+        let currentPage = 1;
+        let pageSize = 25;
+        let currentFilter = 'ALL';
+        let searchQuery = '';
+        let activeMainTab = 'gmail';
+
+        const providers = ['Zero99 Auth', 'Google OAuth', 'Partner Affiliate', 'API Auto-Submit', 'Supplier Batch B'];
+
+        function formatRp(amount) {
+            return 'Rp ' + Math.max(0, amount).toLocaleString('id-ID');
+        }
+
+        function getRandomDate() {
+            const start = new Date(2026, 0, 1);
+            const end = new Date();
+            const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+            return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function generate500Accounts() {
+            const list = [];
+            const names = ['aditya', 'budi', 'chandra', 'dewi', 'eko', 'fajar', 'gita', 'hadi', 'indah', 'joko', 'kartika', 'lani', 'megan', 'nanda', 'oscar', 'putri', 'qori', 'rizky', 'siti', 'taufik', 'utama', 'vivi', 'wahyu', 'xena', 'yogi', 'zainal'];
+
+            for (let i = 1; i <= TOTAL_MOCK_COUNT; i++) {
+                const name1 = names[Math.floor(Math.random() * names.length)];
+                const name2 = names[Math.floor(Math.random() * names.length)];
+                const num = Math.floor(100 + Math.random() * 9000);
+                const email = `${name1}.${name2}${num}@gmail.com`;
+                const provider = providers[Math.floor(Math.random() * providers.length)];
+
+                let status = 'PENDING';
+                if (i <= APPROVED_INITIAL_COUNT) {
+                    status = 'ACCEPTED';
+                } else if (i <= APPROVED_INITIAL_COUNT + REJECTED_INITIAL_COUNT) {
+                    status = 'REJECTED';
+                }
+
+                list.push({
+                    id: i,
+                    email: email,
+                    date: getRandomDate(),
+                    status: status,
+                    rate: RATE_PER_GMAIL,
+                    provider: provider
+                });
+            }
+            return list;
+        }
+
+        function generateInitialWithdrawals() {
+            return [
+                {
+                    id: 'WD-98124',
+                    date: '05 Mar 2026, 14:20',
+                    method: 'DANA',
+                    accountNo: '081234567890',
+                    accountName: 'Admin Partner',
+                    amount: 500000,
+                    status: 'SUCCESS'
+                },
+                {
+                    id: 'WD-98125',
+                    date: '06 Mar 2026, 09:15',
+                    method: 'BCA',
+                    accountNo: '8830129481',
+                    accountName: 'Admin Partner',
+                    amount: 250000,
+                    status: 'PENDING'
+                }
+            ];
+        }
+
+        // --- CORE METRICS CALCULATION ---
+        function updateMetrics() {
+            const acceptedCount = accounts.filter(a => a.status === 'ACCEPTED').length;
+            const pendingCount = accounts.filter(a => a.status === 'PENDING').length;
+            const rejectedCount = accounts.filter(a => a.status === 'REJECTED').length;
+            const totalCount = accounts.length || 1;
+
+            const grossEarnings = acceptedCount * RATE_PER_GMAIL;
+
+            let totalWithdrawn = 0;
+            let pendingWithdrawalAmt = 0;
+            let pendingWithdrawalCount = 0;
+
+            withdrawals.forEach(w => {
+                if (w.status === 'SUCCESS') {
+                    totalWithdrawn += w.amount;
+                } else if (w.status === 'PENDING') {
+                    pendingWithdrawalAmt += w.amount;
+                    pendingWithdrawalCount++;
+                }
+            });
+
+            const netAvailableBalance = Math.max(0, grossEarnings - totalWithdrawn - pendingWithdrawalAmt);
+
+            // Update balance UI
+            const formattedAvailable = formatRp(netAvailableBalance);
+            document.getElementById('statAvailableBalance').textContent = formattedAvailable;
+            document.getElementById('sidebarAvailableBalance').textContent = formattedAvailable;
+            document.getElementById('modalAvailableBalance').textContent = formattedAvailable;
+
+            document.getElementById('statPendingWithdrawal').textContent = formatRp(pendingWithdrawalAmt);
+            document.getElementById('statPendingCountText').textContent = `${pendingWithdrawalCount} transaksi diproses`;
+
+            // Counts & Earnings
+            document.getElementById('statApproved').textContent = acceptedCount.toLocaleString('id-ID');
+            document.getElementById('statApprovedEarnings').textContent = `Total Akumulasi: ${formatRp(grossEarnings)}`;
+
+            document.getElementById('statPending').textContent = pendingCount.toLocaleString('id-ID');
+            document.getElementById('statPotentialEarnings').textContent = `Potensi Tambahan: ${formatRp(pendingCount * RATE_PER_GMAIL)}`;
+
+            document.getElementById('statRejected').textContent = rejectedCount.toLocaleString('id-ID');
+            const rejectPct = ((rejectedCount / totalCount) * 100).toFixed(1);
+            document.getElementById('statRejectedPct').textContent = `${rejectPct}% dari total akun`;
+
+            // Progress Bar
+            const approvedPct = ((acceptedCount / totalCount) * 100).toFixed(1);
+            const rejectedPct = ((rejectedCount / totalCount) * 100).toFixed(1);
+            const pendingPct = Math.max(0, (100 - parseFloat(approvedPct) - parseFloat(rejectedPct))).toFixed(1);
+
+            document.getElementById('progressApprovedBar').style.width = `${approvedPct}%`;
+            document.getElementById('progressRejectedBar').style.width = `${rejectedPct}%`;
+            document.getElementById('progressPendingBar').style.width = `${pendingPct}%`;
+            document.getElementById('progressPercentageText').textContent = `${approvedPct}% Selesai`;
+
+            // Badges & Tab Counts
+            document.getElementById('navPendingBadge').textContent = pendingCount;
+            document.getElementById('tabAllCount').textContent = accounts.length;
+            document.getElementById('tabPendingCount').textContent = pendingCount;
+            document.getElementById('tabApprovedCount').textContent = acceptedCount;
+            document.getElementById('tabRejectedCount').textContent = rejectedCount;
+            document.getElementById('withdrawCountBadge').textContent = withdrawals.length;
+        }
+
+        // --- FILTER & SEARCH ---
+        function applyFilterAndSearch() {
+            filteredAccounts = accounts.filter(acc => {
+                const matchesStatus = currentFilter === 'ALL' || acc.status === currentFilter;
+                const matchesSearch = searchQuery === '' || 
+                    acc.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    acc.id.toString().includes(searchQuery) ||
+                    acc.provider.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesStatus && matchesSearch;
+            });
+            currentPage = 1;
+            renderGmailTable();
+        }
+
+        // --- RENDER GMAIL TABLE ---
+        function renderGmailTable() {
+            const tbody = document.getElementById('gmailTableBody');
+            tbody.innerHTML = '';
+
+            const totalFiltered = filteredAccounts.length;
+            const totalPages = Math.ceil(totalFiltered / pageSize) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, totalFiltered);
+            const pageData = filteredAccounts.slice(startIndex, endIndex);
+
+            if (pageData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="p-8 text-center text-slate-400">
+                            <i class="fa-solid fa-inbox text-3xl mb-2 block"></i>
+                            Tidak ada akun Gmail yang cocok dengan pencarian/filter.
+                        </td>
+                    </tr>
+                `;
+            } else {
+                pageData.forEach((acc) => {
+                    const isChecked = selectedIds.has(acc.id);
+
+                    let statusBadge = '';
+                    if (acc.status === 'ACCEPTED') {
+                        statusBadge = '<span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center w-max"><i class="fa-solid fa-check mr-1"></i> Diterima</span>';
+                    } else if (acc.status === 'REJECTED') {
+                        statusBadge = '<span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center w-max"><i class="fa-solid fa-xmark mr-1"></i> Ditolak</span>';
+                    } else {
+                        statusBadge = '<span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center w-max"><i class="fa-solid fa-clock mr-1"></i> Pending</span>';
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.className = `hover:bg-slate-100/60 dark:hover:bg-darkbg-100/50 transition-colors ${isChecked ? 'bg-brand-500/5' : ''}`;
+                    tr.innerHTML = `
+                        <td class="p-3.5 text-center">
+                            <input type="checkbox" class="row-checkbox rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer" data-id="${acc.id}" ${isChecked ? 'checked' : ''}>
+                        </td>
+                        <td class="p-3.5 text-center font-bold text-slate-400 text-[11px]">${acc.id}</td>
+                        <td class="p-3.5">
+                            <div class="flex items-center space-x-2.5">
+                                <div class="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-500 text-xs font-bold shrink-0">
+                                    <i class="fa-brands fa-google"></i>
+                                </div>
+                                <span class="font-bold text-slate-900 dark:text-slate-100 select-all">${acc.email}</span>
+                            </div>
+                        </td>
+                        <td class="p-3.5 text-slate-500 text-[11px]">${acc.date}</td>
+                        <td class="p-3.5">${statusBadge}</td>
+                        <td class="p-3.5 font-bold text-emerald-600 dark:text-emerald-400 text-[11px]">Rp 4.700</td>
+                        <td class="p-3.5 text-center">
+                            <div class="flex items-center justify-center space-x-1.5">
+                                <button onclick="changeStatus(${acc.id}, 'ACCEPTED')" title="Terima Akun" 
+                                    class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all flex items-center shadow-sm">
+                                    <i class="fa-solid fa-check mr-1"></i> Terima
+                                </button>
+                                <button onclick="changeStatus(${acc.id}, 'REJECTED')" title="Tolak Akun" 
+                                    class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-rose-600 hover:bg-rose-700 text-white transition-all flex items-center shadow-sm">
+                                    <i class="fa-solid fa-xmark mr-1"></i> Tolak
+                                </button>
+                                <button onclick="changeStatus(${acc.id}, 'PENDING')" title="Reset status" 
+                                    class="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-all">
+                                    <i class="fa-solid fa-rotate-left text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('tableSummaryInfo').textContent = totalFiltered > 0 
+                ? `Menampilkan ${startIndex + 1} - ${endIndex} dari ${totalFiltered} akun`
+                : 'Menampilkan 0 akun';
+
+            document.getElementById('pageInfoText').textContent = `Halaman ${currentPage} dari ${totalPages}`;
+
+            renderPaginationControls(totalPages);
+            updateBulkControlsState();
+            attachCheckboxListeners();
+        }
+
+        // --- RENDER WITHDRAWAL TABLE ---
+        function renderWithdrawTable() {
+            const tbody = document.getElementById('withdrawTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (withdrawals.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="p-8 text-center text-slate-400">
+                            <i class="fa-solid fa-receipt text-3xl mb-2 block"></i>
+                            Belum ada riwayat penarikan saldo.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            withdrawals.forEach(w => {
+                let statusBadge = '';
+                if (w.status === 'SUCCESS') {
+                    statusBadge = '<span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center w-max"><i class="fa-solid fa-circle-check mr-1"></i> Berhasil</span>';
+                } else if (w.status === 'REJECTED') {
+                    statusBadge = '<span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center w-max"><i class="fa-solid fa-circle-xmark mr-1"></i> Ditolak</span>';
+                } else {
+                    statusBadge = '<span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center w-max"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Diproses</span>';
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-100/60 dark:hover:bg-darkbg-100/50 transition-colors';
+                tr.innerHTML = `
+                    <td class="p-3.5 font-bold text-slate-900 dark:text-white">${w.id}</td>
+                    <td class="p-3.5 text-slate-500 text-[11px]">${w.date}</td>
+                    <td class="p-3.5 font-bold text-indigo-500">${w.method}</td>
+                    <td class="p-3.5">
+                        <div class="font-bold text-slate-800 dark:text-slate-200">${w.accountNo}</div>
+                        <div class="text-[10px] text-slate-400">${w.accountName}</div>
+                    </td>
+                    <td class="p-3.5 font-black text-emerald-500">${formatRp(w.amount)}</td>
+                    <td class="p-3.5">${statusBadge}</td>
+                    <td class="p-3.5 text-center">
+                        ${w.status === 'PENDING' ? `
+                            <div class="flex items-center justify-center space-x-1">
+                                <button onclick="changeWithdrawStatus('${w.id}', 'SUCCESS')" class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-sm">Selesaikan</button>
+                                <button onclick="changeWithdrawStatus('${w.id}', 'REJECTED')" class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-rose-600 hover:bg-rose-700 text-white transition-all shadow-sm">Batalkan</button>
+                            </div>
+                        ` : '<span class="text-slate-400 text-[11px]">Selesai</span>'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function changeWithdrawStatus(id, newStatus) {
+            const item = withdrawals.find(w => w.id === id);
+            if (item) {
+                item.status = newStatus;
+                updateMetrics();
+                renderWithdrawTable();
+                showToast(`Status penarikan ${id} diubah ke ${newStatus}`, newStatus === 'SUCCESS' ? 'success' : 'info');
+            }
+        }
+
+        // --- PAGINATION & BULK HELPERS ---
+        function renderPaginationControls(totalPages) {
+            const container = document.getElementById('paginationControls');
+            container.innerHTML = '';
+
+            const prevBtn = document.createElement('button');
+            prevBtn.className = `px-2.5 py-1 rounded-lg text-xs font-bold ${currentPage === 1 ? 'text-slate-400 cursor-not-allowed' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800'}`;
+            prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderGmailTable(); } };
+            container.appendChild(prevBtn);
+
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `px-3 py-1 rounded-lg text-xs font-bold transition-colors ${i === currentPage ? 'bg-brand-600 text-white' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'}`;
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => { currentPage = i; renderGmailTable(); };
+                container.appendChild(pageBtn);
+            }
+
+            const nextBtn = document.createElement('button');
+            nextBtn.className = `px-2.5 py-1 rounded-lg text-xs font-bold ${currentPage === totalPages ? 'text-slate-400 cursor-not-allowed' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800'}`;
+            nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; renderGmailTable(); } };
+            container.appendChild(nextBtn);
+        }
+
+        function updateBulkControlsState() {
+            const btnBulkAccept = document.getElementById('btnBulkAccept');
+            const btnBulkReject = document.getElementById('btnBulkReject');
+            const selectedCountText = document.getElementById('selectedCountText');
+            
+            const count = selectedIds.size;
+            selectedCountText.textContent = count;
+            btnBulkAccept.disabled = count === 0;
+            btnBulkReject.disabled = count === 0;
+
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            if (selectAllCheckbox) {
+                const currentPagesIds = filteredAccounts.slice((currentPage - 1) * pageSize, currentPage * pageSize).map(a => a.id);
+                selectAllCheckbox.checked = currentPagesIds.length > 0 && currentPagesIds.every(id => selectedIds.has(id));
+            }
+        }
+
+        function attachCheckboxListeners() {
+            document.querySelectorAll('.row-checkbox').forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    const id = parseInt(e.target.getAttribute('data-id'));
+                    if (e.target.checked) {
+                        selectedIds.add(id);
+                    } else {
+                        selectedIds.delete(id);
+                    }
+                    updateBulkControlsState();
+                });
+            });
+        }
+
+        // --- TAB SWITCHING ---
+        function switchMainTab(tab) {
+            activeMainTab = tab;
+            const gmailSec = document.getElementById('gmailSection');
+            const withdrawSec = document.getElementById('withdrawSection');
+            const tabBtnGmail = document.getElementById('tabBtnGmailView');
+            const tabBtnWithdraw = document.getElementById('tabBtnWithdrawView');
+
+            if (tab === 'gmail') {
+                gmailSec.classList.remove('hidden');
+                withdrawSec.classList.add('hidden');
+                tabBtnGmail.className = 'pb-3 border-b-2 border-brand-500 text-brand-600 dark:text-brand-400 flex items-center';
+                tabBtnWithdraw.className = 'pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center';
+            } else {
+                gmailSec.classList.add('hidden');
+                withdrawSec.classList.remove('hidden');
+                tabBtnGmail.className = 'pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center';
+                tabBtnWithdraw.className = 'pb-3 border-b-2 border-brand-500 text-brand-600 dark:text-brand-400 flex items-center';
+                renderWithdrawTable();
+            }
+        }
+
+        // --- WITHDRAWAL MODAL HANDLERS ---
+        function openWithdrawModal() {
+            updateMetrics();
+            document.getElementById('withdrawModal').classList.remove('hidden');
+        }
+
+        function closeWithdrawModal() {
+            document.getElementById('withdrawModal').classList.add('hidden');
+            document.getElementById('withdrawForm').reset();
+        }
+
+        function updateAccountLabel() {
+            const method = document.getElementById('withdrawMethod').value;
+            const label = document.getElementById('accountNumberLabel');
+            if (['DANA', 'OVO', 'GOPAY', 'SHOPEEPAY'].includes(method)) {
+                label.textContent = 'Nomor HP E-Wallet';
+            } else if (method === 'USDT') {
+                label.textContent = 'Alamat Wallet TRC20';
+            } else {
+                label.textContent = 'Nomor Rekening Bank';
+            }
+        }
+
+        function setMaxWithdrawAmount() {
+            const acceptedCount = accounts.filter(a => a.status === 'ACCEPTED').length;
+            const grossEarnings = acceptedCount * RATE_PER_GMAIL;
+            let totalWithdrawn = 0;
+            let pendingWithdrawalAmt = 0;
+
+            withdrawals.forEach(w => {
+                if (w.status === 'SUCCESS') totalWithdrawn += w.amount;
+                if (w.status === 'PENDING') pendingWithdrawalAmt += w.amount;
+            });
+
+            const available = Math.max(0, grossEarnings - totalWithdrawn - pendingWithdrawalAmt);
+            document.getElementById('withdrawAmount').value = available;
+        }
+
+        function handleWithdrawSubmit(event) {
+            event.preventDefault();
+            const method = document.getElementById('withdrawMethod').value;
+            const amount = parseInt(document.getElementById('withdrawAmount').value);
+            const accountNo = document.getElementById('withdrawAccountNo').value.trim();
+            const accountName = document.getElementById('withdrawAccountName').value.trim();
+
+            const acceptedCount = accounts.filter(a => a.status === 'ACCEPTED').length;
+            const grossEarnings = acceptedCount * RATE_PER_GMAIL;
+            let totalWithdrawn = 0;
+            let pendingWithdrawalAmt = 0;
+
+            withdrawals.forEach(w => {
+                if (w.status === 'SUCCESS') totalWithdrawn += w.amount;
+                if (w.status === 'PENDING') pendingWithdrawalAmt += w.amount;
+            });
+
+            const available = Math.max(0, grossEarnings - totalWithdrawn - pendingWithdrawalAmt);
+
+            if (amount > available) {
+                showToast('Saldo siap tarik tidak mencukupi untuk nominal ini!', 'error');
+                return;
+            }
+
+            const newTrx = {
+                id: `WD-${Math.floor(10000 + Math.random() * 90000)}`,
+                date: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                method: method,
+                accountNo: accountNo,
+                accountName: accountName,
+                amount: amount,
+                status: 'PENDING'
+            };
+
+            withdrawals.unshift(newTrx);
+            closeWithdrawModal();
+            updateMetrics();
+            renderWithdrawTable();
+            showToast(`Pengajuan penarikan ${formatRp(amount)} berhasil dikirim!`, 'success');
+        }
+
+        // --- TOAST NOTIFICATION ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            let bgClass = 'bg-slate-900 text-white';
+            let icon = 'fa-circle-info text-indigo-400';
+
+            if (type === 'success') {
+                bgClass = 'bg-slate-900 text-white border-l-4 border-emerald-500';
+                icon = 'fa-circle-check text-emerald-400';
+            } else if (type === 'error') {
+                bgClass = 'bg-slate-900 text-white border-l-4 border-rose-500';
+                icon = 'fa-circle-xmark text-rose-400';
+            }
+
+            toast.className = `${bgClass} p-3.5 rounded-xl shadow-xl flex items-center space-x-3 pointer-events-auto toast-enter text-xs font-semibold max-w-sm`;
+            toast.innerHTML = `
+                <i class="fa-solid ${icon} text-base shrink-0"></i>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // --- ACTIONS & DIALOGS ---
+        window.changeStatus = function(id, newStatus) {
+            const acc = accounts.find(a => a.id === id);
+            if (acc) {
+                const oldStatus = acc.status;
+                acc.status = newStatus;
+                updateMetrics();
+                renderGmailTable();
+
+                if (newStatus === 'ACCEPTED' && oldStatus !== 'ACCEPTED') {
+                    showToast(`Akun ${acc.email} DITERIMA (+Rp 4.700 ke saldo)`, 'success');
+                } else if (newStatus === 'REJECTED') {
+                    showToast(`Akun ${acc.email} DITOLAK`, 'error');
+                } else {
+                    showToast(`Status ${acc.email} di-reset ke Pending`, 'info');
+                }
+            }
+        };
+
+        window.showRateInfo = function() {
+            showToast('Rate Faszx99: Rp 4.700 per Gmail disetujui (ACCEPTED). Minimum wd: Rp 10.000.', 'info');
+        };
+
+        // --- BULK BUTTON EVENT LISTENERS ---
+        document.getElementById('btnBulkAccept').addEventListener('click', () => {
+            if (selectedIds.size === 0) return;
+            const count = selectedIds.size;
+            accounts.forEach(acc => {
+                if (selectedIds.has(acc.id)) acc.status = 'ACCEPTED';
+            });
+            selectedIds.clear();
+            updateMetrics();
+            applyFilterAndSearch();
+            showToast(`${count} akun Gmail diterima massal! Total saldo bertambah ${formatRp(count * RATE_PER_GMAIL)}`, 'success');
+        });
+
+        document.getElementById('btnBulkReject').addEventListener('click', () => {
+            if (selectedIds.size === 0) return;
+            const count = selectedIds.size;
+            accounts.forEach(acc => {
+                if (selectedIds.has(acc.id)) acc.status = 'REJECTED';
+            });
+            selectedIds.clear();
+            updateMetrics();
+            applyFilterAndSearch();
+            showToast(`${count} akun Gmail ditolak massal!`, 'error');
+        });
+
+        document.getElementById('selectAllCheckbox').addEventListener('change', (e) => {
+            const startIndex = (currentPage - 1) * pageSize;
+            const pageData = filteredAccounts.slice(startIndex, startIndex + pageSize);
+
+            pageData.forEach(acc => {
+                if (e.target.checked) {
+                    selectedIds.add(acc.id);
+                } else {
+                    selectedIds.delete(acc.id);
+                }
+            });
+            renderGmailTable();
+        });
+
+        document.getElementById('pageSizeSelect').addEventListener('change', (e) => {
+            pageSize = parseInt(e.target.value);
+            currentPage = 1;
+            renderGmailTable();
+        });
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            searchQuery = e.target.value.trim();
+            applyFilterAndSearch();
+        });
+
+        // Filter tab triggers
+        document.querySelectorAll('.filter-tab').forEach(tabBtn => {
+            tabBtn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-tab').forEach(b => {
+                    b.classList.remove('bg-brand-600', 'text-white', 'font-bold');
+                    b.classList.add('text-slate-600', 'dark:text-slate-400');
+                });
+                tabBtn.classList.add('bg-brand-600', 'text-white', 'font-bold');
+                currentFilter = tabBtn.getAttribute('data-status');
+                applyFilterAndSearch();
+            });
+        });
+
+        // Reset Data
+        document.getElementById('btnResetData').addEventListener('click', () => {
+            accounts = generate500Accounts();
+            withdrawals = generateInitialWithdrawals();
+            selectedIds.clear();
+            updateMetrics();
+            applyFilterAndSearch();
+            showToast('1.300 data Gmail dan Saldo berhasil di-reset.', 'info');
+        });
+
+        // EXPORT CSV
+        document.getElementById('btnExportCSV').addEventListener('click', () => {
+            let csvContent = "data:text/csv;charset=utf-8,ID,Gmail,Tanggal,Status,NilaiKomisi\n";
+            accounts.forEach(a => {
+                csvContent += `${a.id},"${a.email}","${a.date}",${a.status},${a.rate}\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Zero99_Gmail_Report_${Date.now()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            showToast('Laporan 1.300 data Gmail diexport ke CSV!', 'success');
+        });
+
+        // IMPORT MODAL
+        const importModal = document.getElementById('importModal');
+        document.getElementById('btnImportModal').addEventListener('click', () => importModal.classList.remove('hidden'));
+        document.getElementById('closeImportModal').addEventListener('click', () => importModal.classList.add('hidden'));
+        document.getElementById('cancelImportBtn').addEventListener('click', () => importModal.classList.add('hidden'));
+
+        document.getElementById('submitImportBtn').addEventListener('click', () => {
+            const text = document.getElementById('importTextarea').value.trim();
+            if (!text) {
+                showToast('Masukkan minimal satu email Gmail!', 'error');
+                return;
+            }
+
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            let importedCount = 0;
+
+            lines.forEach((emailStr) => {
+                const cleanEmail = emailStr.includes('@') ? emailStr : `${emailStr}@gmail.com`;
+                accounts.unshift({
+                    id: accounts.length + 1,
+                    email: cleanEmail,
+                    date: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                    status: 'PENDING',
+                    rate: RATE_PER_GMAIL,
+                    provider: 'Imported Manual'
+                });
+                importedCount++;
+            });
+
+            document.getElementById('importTextarea').value = '';
+            importModal.classList.add('hidden');
+            updateMetrics();
+            applyFilterAndSearch();
+            showToast(`${importedCount} Gmail baru ditambahkan ke pending list!`, 'success');
+        });
+
+        // SIDEBAR TOGGLE
+        const sidebar = document.getElementById('sidebar');
+        document.getElementById('openSidebarBtn').addEventListener('click', () => sidebar.classList.remove('-translate-x-full'));
+        document.getElementById('closeSidebarBtn').addEventListener('click', () => sidebar.classList.add('-translate-x-full'));
+
+        // THEME TOGGLE
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        themeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            themeIcon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-lg' : 'fa-solid fa-moon text-slate-700 text-lg';
+        });
+
+        // LIVE CLOCK
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('liveClock').textContent = now.toLocaleTimeString('id-ID') + ' WIB';
+        }, 1000);
+
+        // INITIALIZATION
+        window.onload = function() {
+            accounts = generate500Accounts();
+            withdrawals = generateInitialWithdrawals();
+            updateMetrics();
+            applyFilterAndSearch();
+        };
+    </script>
+</body>
+</html>
